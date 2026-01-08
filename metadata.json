@@ -1,0 +1,8 @@
+{
+  "name": "AutoBlog AI - Fábrica de Conteúdo SEO",
+  "description": "Uma plataforma SaaS completa para criação, otimização e publicação automatizada de artigos para blogs usando Inteligência Artificial de ponta.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
