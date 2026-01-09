@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 
-const HubView: React.FC = () => {
+interface HubViewProps {
+  pillars: string[];
+  setPillars: (pillars: string[]) => void;
+  onCreateArticle: (pillar: string) => void;
+}
+
+const HubView: React.FC<HubViewProps> = ({ pillars, setPillars, onCreateArticle }) => {
   const [showPillarModal, setShowPillarModal] = useState(false);
-  const [pillars, setPillars] = useState<string[]>([]);
   const [newPillar, setNewPillar] = useState('');
 
   const suggestedPillars = [
@@ -84,7 +89,7 @@ const HubView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pillars.map((pillar, index) => (
               <div key={index} className="border-2 border-indigo-200 bg-indigo-50 rounded-lg p-4">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between mb-3">
                   <p className="font-semibold text-indigo-900">{pillar}</p>
                   <button
                     onClick={() => setPillars(pillars.filter((_, i) => i !== index))}
@@ -93,7 +98,13 @@ const HubView: React.FC = () => {
                     ✕
                   </button>
                 </div>
-                <p className="text-sm text-indigo-700 mt-2">0 artigos planejados</p>
+                <p className="text-sm text-indigo-700 mb-3">0 artigos planejados</p>
+                <button
+                  onClick={() => onCreateArticle(pillar)}
+                  className="w-full text-sm bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all"
+                >
+                  Criar Artigo →
+                </button>
               </div>
             ))}
           </div>

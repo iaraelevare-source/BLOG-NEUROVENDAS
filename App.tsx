@@ -19,6 +19,8 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('hub'); // Start with Hub Central as primary
   const [credits, setCredits] = useState(CREDIT_LIMIT);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [pillars, setPillars] = useState<string[]>([]); // Shared state for authority pillars
+  const [selectedPillar, setSelectedPillar] = useState<string>(''); // Context for Generator
 
   useEffect(() => {
     if (isLoggedIn && projects.length === 0) {
@@ -54,11 +56,26 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard pillars={pillars} />;
       case 'hub':
-        return <HubView />;
+        return (
+          <HubView 
+            pillars={pillars} 
+            setPillars={setPillars}
+            onCreateArticle={(pillar: string) => {
+              setSelectedPillar(pillar);
+              setActiveTab('generator');
+            }}
+          />
+        );
       case 'generator':
-        return <ArticleGenerator />;
+        return (
+          <ArticleGenerator 
+            pillars={pillars}
+            selectedPillar={selectedPillar}
+            onBackToHub={() => setActiveTab('hub')}
+          />
+        );
       case 'examples':
         return <ExploreExamples />;
       case 'autopilot':
