@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface OnboardingProps {
-  onComplete: () => void;
+  onComplete: (data: { clinicName: string; specialty: string }) => void;
 }
 
 const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
@@ -230,7 +230,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             </button>
           ) : (
             <button
-              onClick={onComplete}
+              onClick={() => onComplete({ clinicName, specialty: clinicFocus })}
               className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg"
             >
               Ir para Hub Central 🚀

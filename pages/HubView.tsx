@@ -1,22 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import lucresiaService from '../services/lucresiaService';
+import type { CalendarSuggestion, PillarSuggestion } from '../types';
 
 interface HubViewProps {
   pillars: string[];
   setPillars: (pillars: string[]) => void;
   onCreateArticle: (pillar: string) => void;
+  clinicSpecialty?: string;
 }
 
-const HubView: React.FC<HubViewProps> = ({ pillars, setPillars, onCreateArticle }) => {
+const HubView: React.FC<HubViewProps> = ({ pillars, setPillars, onCreateArticle, clinicSpecialty = 'harmonização facial' }) => {
   const [showPillarModal, setShowPillarModal] = useState(false);
   const [newPillar, setNewPillar] = useState('');
+  const [suggestedPillars, setSuggestedPillars] = useState<PillarSuggestion[]>([]);
+  const [calendarSuggestions, setCalendarSuggestions] = useState<CalendarSuggestion[]>([]);
+  const [loadingPillars, setLoadingPillars] = useState(false);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
 
-  const suggestedPillars = [
-    '🎯 Harmonização Facial',
-    '💆 Tratamentos Faciais Avançados',
-    '💪 Estética Corporal',
-    '✨ Cuidados com a Pele',
-    '🌟 Bem-estar e Autoestima',
-  ];
+  // Load pillar suggestions
+  useEffect(() => {
+    const loadPillarSuggestions = async () => {
+      setLoadingPillars(true);
+      const suggestions = await lucresiaService.suggestPillars(clinicSpecialty, pillars);
+      setSuggestedPillars(suggestions);
+      setLoadingPillars(false);
+    };
+    
+    if (showPillarModal) {
+      loadPillarSuggestions();
+    }
+  }, [showPillarModal, clinicSpecialty, pillars]);
+
+  // Load calendar suggestions when pillars change
+  useEffect(() => {
+    const loadCalendar = async () => {
+      if (pillars.length >= 3) {
+        setLoadingCalendar(true);
+        const suggestions = await lucresiaService.generateEditorialCalendar(pillars, clinicSpecialty, 4);
+        setCalendarSuggestions(suggestions);
+        setLoadingCalendar(false);
+      }
+    };
+    
+    loadCalendar();
+  }, [pillars, clinicSpecialty]);
 
   const handleAddPillar = (pillar: string) => {
     if (!pillars.includes(pillar) && pillars.length < 5) {
@@ -136,7 +163,7 @@ const HubView: React.FC<HubViewProps> = ({ pillars, setPillars, onCreateArticle 
               Recomendações Lucresia
             </h3>
             {pillars.length >= 3 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <p className="text-slate-700">
                   ✅ Excelente! Você tem {pillars.length} pilares definidos.
                 </p>
@@ -148,9 +175,57 @@ const HubView: React.FC<HubViewProps> = ({ pillars, setPillars, onCreateArticle 
                   <li>Planeje conteúdo educativo que demonstre expertise</li>
                   <li>Balance entre procedimentos, educação e gestão</li>
                 </ul>
-                <button className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-all">
-                  Gerar Calendário Editorial →
-                </button>
+                
+                {/* Editorial Calendar Suggestions */}
+                {loadingCalendar ? (
+                  <div className="mt-4 bg-white rounded-lg p-4">
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ) : calendarSuggestions.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <h4 className="font-semibold text-slate-900">📅 Calendário Editorial Sugerido (4 semanas):</h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {calendarSuggestions.slice(0, 6).map((suggestion) => (
+                        <div key={suggestion.id} className="bg-white rounded-lg p-3 border border-indigo-100">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-indigo-600">
+                                  Semana {suggestion.estimatedWeek}
+                                </span>
+                                <span className="text-xs text-slate-500">•</span>
+                                <span className="text-xs font-medium text-indigo-700">
+                                  {suggestion.pillar}
+                                </span>
+                              </div>
+                              <div className="font-medium text-slate-900 text-sm mt-1">
+                                {suggestion.title}
+                              </div>
+                              <div className="text-xs text-slate-600 mt-1">
+                                {suggestion.rationale}
+                              </div>
+                            </div>
+                            <div className={`ml-3 px-2 py-1 rounded-full text-xs font-semibold ${
+                              suggestion.priority === 'alta' ? 'bg-red-100 text-red-700' : 
+                              suggestion.priority === 'média' ? 'bg-amber-100 text-amber-700' : 
+                              'bg-slate-100 text-slate-700'
+                            }`}>
+                              {suggestion.priority === 'alta' ? '🔥' : suggestion.priority === 'média' ? '⚡' : '💡'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {calendarSuggestions.length > 6 && (
+                      <p className="text-xs text-slate-600 text-center">
+                        + {calendarSuggestions.length - 6} mais sugestões
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-slate-700">
@@ -218,23 +293,50 @@ const HubView: React.FC<HubViewProps> = ({ pillars, setPillars, onCreateArticle 
 
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
               <h4 className="font-semibold text-indigo-900 mb-3">
-                🤖 Sugestões Lucresia para Estética:
+                🤖 Sugestões Lucresia para {clinicSpecialty}:
               </h4>
-              <div className="space-y-2">
-                {suggestedPillars.map((pillar) => (
-                  <button
-                    key={pillar}
-                    onClick={() => handleAddPillar(pillar)}
-                    disabled={pillars.includes(pillar) || pillars.length >= 5}
-                    className="w-full text-left px-4 py-2 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {pillar}
-                    {pillars.includes(pillar) && (
-                      <span className="float-right text-green-600">✓</span>
-                    )}
-                  </button>
-                ))}
-              </div>
+              {loadingPillars ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="text-sm text-slate-600 mt-2">Analisando nicho...</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {suggestedPillars.map((suggestion) => (
+                    <button
+                      key={suggestion.name}
+                      onClick={() => handleAddPillar(suggestion.name)}
+                      disabled={pillars.includes(suggestion.name) || pillars.length >= 5}
+                      className="w-full text-left px-4 py-3 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-semibold text-slate-900">{suggestion.name}</div>
+                          <div className="text-sm text-slate-600 mt-1">{suggestion.description}</div>
+                          <div className="flex gap-1 mt-2">
+                            {suggestion.keywords.slice(0, 3).map((keyword) => (
+                              <span key={keyword} className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                                {keyword}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          {pillars.includes(suggestion.name) ? (
+                            <span className="text-green-600">✓</span>
+                          ) : (
+                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                              suggestion.expectedImpact === 'alto' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {suggestion.expectedImpact === 'alto' ? '🔥 Alto impacto' : '✨ Médio impacto'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mb-6">

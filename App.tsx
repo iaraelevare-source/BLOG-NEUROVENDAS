@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [pillars, setPillars] = useState<string[]>([]); // Shared state for authority pillars
   const [selectedPillar, setSelectedPillar] = useState<string>(''); // Context for Generator
+  const [clinicInfo, setClinicInfo] = useState({ name: '', specialty: 'harmonização facial' }); // Clinic data from onboarding
 
   useEffect(() => {
     if (isLoggedIn && projects.length === 0) {
@@ -45,7 +46,8 @@ const App: React.FC = () => {
   if (!hasCompletedOnboarding) {
     return (
       <Onboarding
-        onComplete={() => {
+        onComplete={(data: { clinicName: string; specialty: string }) => {
+          setClinicInfo({ name: data.clinicName, specialty: data.specialty });
           setHasCompletedOnboarding(true);
           setActiveTab('hub'); // Go directly to Hub Central
         }}
@@ -66,6 +68,7 @@ const App: React.FC = () => {
               setSelectedPillar(pillar);
               setActiveTab('generator');
             }}
+            clinicSpecialty={clinicInfo.specialty}
           />
         );
       case 'generator':
