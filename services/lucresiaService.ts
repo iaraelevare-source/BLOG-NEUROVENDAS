@@ -6,7 +6,8 @@
  * migração futura para API Lucresia dedicada.
  */
 
-import { GoogleGenerativeAI } from '@google/genai';
+// GoogleGenerativeAI import commented out - using mock data for now
+// import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { 
   NicheAnalysis, 
   EditorialRecommendation, 
