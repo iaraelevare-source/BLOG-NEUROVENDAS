@@ -56,7 +56,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard pillars={pillars} />;
+        return <Dashboard pillars={pillars} onNavigateToHub={() => setActiveTab('hub')} />;
       case 'hub':
         return (
           <HubView 

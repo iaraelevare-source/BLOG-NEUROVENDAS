@@ -2,9 +2,10 @@ import React from 'react';
 
 interface DashboardProps {
   pillars: string[];
+  onNavigateToHub?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ pillars }) => {
+const Dashboard: React.FC<DashboardProps> = ({ pillars, onNavigateToHub }) => {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-slate-900">Dashboard</h2>
@@ -42,13 +43,12 @@ const Dashboard: React.FC<DashboardProps> = ({ pillars }) => {
             Para construir autoridade de forma estratégica, você precisa primeiro definir 
             seus pilares no Hub Central. Pilares são os temas principais que representam sua expertise.
           </p>
-          <a 
-            href="#" 
-            onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('navigate', { detail: 'hub' })); }}
+          <button 
+            onClick={onNavigateToHub}
             className="inline-block bg-amber-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-700 transition-all"
           >
             Ir para Hub Central →
-          </a>
+          </button>
         </div>
       ) : (
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
