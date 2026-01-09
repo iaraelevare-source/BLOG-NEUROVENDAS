@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
+import Onboarding from './pages/Onboarding';
 import ArticleGenerator from './pages/ArticleGenerator';
 import HubView from './pages/HubView';
 import ExploreExamples from './pages/ExploreExamples';
@@ -14,7 +15,8 @@ import { CREDIT_LIMIT } from './constants';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState('hub'); // Start with Hub Central as primary
   const [credits, setCredits] = useState(CREDIT_LIMIT);
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -35,6 +37,18 @@ const App: React.FC = () => {
 
   if (!isLoggedIn) {
     return <LandingPage onStart={() => setIsLoggedIn(true)} />;
+  }
+
+  // Show onboarding after login but before main app
+  if (!hasCompletedOnboarding) {
+    return (
+      <Onboarding
+        onComplete={() => {
+          setHasCompletedOnboarding(true);
+          setActiveTab('hub'); // Go directly to Hub Central
+        }}
+      />
+    );
   }
 
   const renderContent = () => {
