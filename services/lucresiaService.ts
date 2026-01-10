@@ -6,8 +6,7 @@
  * migração futura para API Lucresia dedicada.
  */
 
-// GoogleGenerativeAI import commented out - using mock data for now
-// import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import type { 
   NicheAnalysis, 
   EditorialRecommendation, 
@@ -19,13 +18,11 @@ import type {
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 class LucresiaService {
-  private ai: GoogleGenerativeAI | null = null;
-  private model: any = null;
+  private ai: GoogleGenAI | null = null;
 
   constructor() {
     if (GEMINI_API_KEY) {
-      this.ai = new GoogleGenerativeAI(GEMINI_API_KEY);
-      this.model = this.ai.getGenerativeModel({ model: 'gemini-pro' });
+      this.ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
     }
   }
 
@@ -33,7 +30,7 @@ class LucresiaService {
    * Analisa o nicho da clínica e identifica oportunidades de autoridade
    */
   async analyzeNiche(clinicName: string, specialty: string): Promise<NicheAnalysis> {
-    if (!this.model) {
+    if (!this.ai) {
       return this.getMockNicheAnalysis(specialty);
     }
 
@@ -65,9 +62,12 @@ Forneça uma análise estratégica no seguinte formato JSON:
 Seja estratégico e focado em construir autoridade, não volume.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const result = await this.ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: prompt
+      });
+      
+      const text = result.text || '';
       
       // Parse JSON da resposta
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -90,7 +90,7 @@ Seja estratégico e focado em construir autoridade, não volume.`;
     articlesCount: number,
     specialty: string
   ): Promise<EditorialRecommendation[]> {
-    if (!this.model) {
+    if (!this.ai) {
       return this.getMockRecommendations(pillars.length);
     }
 
@@ -120,9 +120,8 @@ Forneça 3 recomendações estratégicas no formato JSON:
 Seja estratégico e focado em autoridade, não volume.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const result = await this.ai.models.generateContent({ model: 'gemini-1.5-flash', contents: prompt });
+      const text = result.text || '';
       
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -211,7 +210,7 @@ Seja estratégico e focado em autoridade, não volume.`;
     specialty: string,
     weeksAhead: number = 4
   ): Promise<CalendarSuggestion[]> {
-    if (!this.model) {
+    if (!this.ai) {
       return this.getMockCalendarSuggestions(pillars, weeksAhead);
     }
 
@@ -242,9 +241,8 @@ Forneça ${weeksAhead * 2} sugestões de artigos no formato JSON:
 Distribua artigos equilibradamente entre os pilares e semanas.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const result = await this.ai.models.generateContent({ model: 'gemini-1.5-flash', contents: prompt });
+      const text = result.text || '';
       
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -263,7 +261,7 @@ Distribua artigos equilibradamente entre os pilares e semanas.`;
    * Gera ideias de artigos para um pilar específico
    */
   async generateArticleIdeas(pillar: string, specialty: string, count: number = 5): Promise<ArticleIdea[]> {
-    if (!this.model) {
+    if (!this.ai) {
       return this.getMockArticleIdeas(pillar, count);
     }
 
@@ -291,9 +289,8 @@ Formato JSON:
 Foque em conteúdo que constrói autoridade, não volume.`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const result = await this.ai.models.generateContent({ model: 'gemini-1.5-flash', contents: prompt });
+      const text = result.text || '';
       
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {

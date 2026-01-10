@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -10,18 +9,23 @@ import ExploreExamples from './pages/ExploreExamples';
 import AutomationConfig from './pages/AutomationConfig';
 import YoutubeConverter from './pages/YoutubeConverter';
 import WebStoriesView from './pages/WebStoriesView';
+import creditService from './services/creditService';
 import { Project, PlatformType } from './types';
-import { CREDIT_LIMIT } from './constants';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [activeTab, setActiveTab] = useState('hub'); // Start with Hub Central as primary
-  const [credits, setCredits] = useState(CREDIT_LIMIT);
+  const [credits, setCredits] = useState(creditService.getCredits().remaining);
   const [projects, setProjects] = useState<Project[]>([]);
   const [pillars, setPillars] = useState<string[]>([]); // Shared state for authority pillars
   const [selectedPillar, setSelectedPillar] = useState<string>(''); // Context for Generator
   const [clinicInfo, setClinicInfo] = useState({ name: '', specialty: 'harmonização facial' }); // Clinic data from onboarding
+
+  // Update credits display
+  const updateCredits = () => {
+    setCredits(creditService.getCredits().remaining);
+  };
 
   useEffect(() => {
     if (isLoggedIn && projects.length === 0) {
@@ -77,6 +81,7 @@ const App: React.FC = () => {
             pillars={pillars}
             selectedPillar={selectedPillar}
             onBackToHub={() => setActiveTab('hub')}
+            onCreditsUpdate={updateCredits}
           />
         );
       case 'examples':

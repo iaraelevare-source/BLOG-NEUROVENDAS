@@ -1,26 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import distributionService from '../services/distributionService';
+import articleGenerationService from '../services/articleGenerationService';
+import creditService from '../services/creditService';
 import type { ArticleType } from '../types';
 
 interface ArticleGeneratorProps {
   pillars: string[];
   selectedPillar?: string;
   onBackToHub: () => void;
+  onCreditsUpdate?: () => void;
 }
 
 const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ 
   pillars, 
   selectedPillar, 
-  onBackToHub 
+  onBackToHub,
+  onCreditsUpdate 
 }) => {
   const [topic, setTopic] = useState('');
   const [pillar, setPillar] = useState(selectedPillar || '');
   const [articleType, setArticleType] = useState<ArticleType>('autoridade-clinica');
-  const [content, setContent] = useState('');
+  const [generatedContent, setGeneratedContent] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isDistributing, setIsDistributing] = useState(false);
   const [distributionResults, setDistributionResults] = useState<any[]>([]);
   const [platforms, setPlatforms] = useState(distributionService.getPlatforms());
+  const [generationError, setGenerationError] = useState<string>('');
+  const [generationSuccess, setGenerationSuccess] = useState(false);
+  const [apiConfigured, setApiConfigured] = useState(false);
+
+  useEffect(() => {
+    const status = articleGenerationService.getConfigStatus();
+    setApiConfigured(status.configured);
+  }, []);
 
   const togglePlatform = (platformId: string) => {
     distributionService.updatePlatformStatus(
@@ -30,18 +43,66 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
     setPlatforms(distributionService.getPlatforms());
   };
 
-  const handleGenerateAndDistribute = async () => {
-    if (!topic) return;
+  const handleGenerateArticle = async () => {
+    if (!topic || !pillar) return;
+
+    // Check credits
+    if (!creditService.hasEnoughCredits(1)) {
+      setGenerationError('Créditos insuficientes. Você precisa de 1 crédito para gerar um artigo.');
+      return;
+    }
+
+    // Check if API is configured
+    if (!apiConfigured) {
+      setGenerationError('Configure sua chave API do Google Gemini no arquivo .env.local para gerar artigos reais.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationError('');
+    setGenerationSuccess(false);
+    setGeneratedContent('');
+
+    try {
+      // Generate article using AI
+      const result = await articleGenerationService.generateArticle({
+        topic,
+        pillar,
+        articleType,
+      });
+
+      // Consume credit
+      creditService.consumeForArticleGeneration();
+      
+      // Update content
+      setGeneratedContent(result.content);
+      setGenerationSuccess(true);
+      
+      // Notify parent to update credits display
+      if (onCreditsUpdate) {
+        onCreditsUpdate();
+      }
+
+      console.log(`✓ Artigo gerado: ${result.wordCount} palavras, SEO score: ${result.seoScore}`);
+    } catch (error: any) {
+      setGenerationError(error.message || 'Erro ao gerar artigo. Tente novamente.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDistribute = async () => {
+    if (!generatedContent) {
+      setGenerationError('Gere um artigo primeiro antes de distribuir.');
+      return;
+    }
 
     setIsDistributing(true);
     setDistributionResults([]);
 
-    // Simulate article generation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
     const article = {
       title: topic,
-      content: content || `Conteúdo detalhado sobre ${topic}. Este artigo foi criado para fortalecer o pilar "${pillar}" e construir autoridade no seu nicho.`,
+      content: generatedContent,
       pillar,
       type: articleType,
     };
@@ -144,44 +205,82 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
               onChange={(e) => setArticleType(e.target.value as ArticleType)}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             >
-              <option value="autoridade-clinica">Autoridade Clínica</option>
-              <option value="educacao-paciente">Educação do Paciente</option>
-              <option value="caso-sucesso">Caso de Sucesso</option>
-              <option value="procedimento-guia">Guia de Procedimento</option>
-              <option value="tendencia">Tendência</option>
-              <option value="faq">FAQ</option>
+              <option value="procedimento">Procedimento</option>
+              <option value="autoridade_clinica">Autoridade Clínica</option>
+              <option value="educativo">Educativo</option>
+              <option value="gestao_estetica">Gestão Estética</option>
+              <option value="tendencia_beleza">Tendência/Beleza</option>
+              <option value="resenha_produto">Resenha de Produto</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-900 mb-2">
-              Conteúdo (Opcional - para pré-visualização)
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Cole o conteúdo do artigo aqui para pré-visualizar adaptação multi-canal..."
-              rows={4}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-          </div>
+          {/* Generation Error/Success Messages */}
+          {generationError && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+              <p className="text-red-800 text-sm"><strong>❌ Erro:</strong> {generationError}</p>
+            </div>
+          )}
+
+          {generationSuccess && (
+            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+              <p className="text-green-800 text-sm"><strong>✓ Sucesso!</strong> Artigo gerado com sucesso. Role para baixo para ver o conteúdo ou distribua nas plataformas.</p>
+            </div>
+          )}
+
+          {!apiConfigured && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+              <p className="text-blue-800 text-sm">
+                <strong>ℹ️ Configuração necessária:</strong> Para gerar artigos reais, adicione sua chave API do Google Gemini no arquivo <code>.env.local</code>
+              </p>
+            </div>
+          )}
           
+          {/* Generation Button */}
           <button
-            onClick={handleGenerateAndDistribute}
-            className="w-full bg-indigo-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-950 transition-all shadow-md disabled:opacity-50"
-            disabled={!topic || (pillars.length > 0 && !pillar) || isDistributing}
+            onClick={handleGenerateArticle}
+            className="w-full bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!topic || (pillars.length > 0 && !pillar) || isGenerating || !apiConfigured}
           >
-            {isDistributing ? 'Distribuindo...' : 'Gerar e Distribuir Multi-Canal'}
+            {isGenerating ? '⏳ Gerando artigo...' : '✨ Gerar Artigo com Lucresia (1 crédito)'}
           </button>
+
+          {/* Distribution Button - Only shown after generation */}
+          {generatedContent && (
+            <button
+              onClick={handleDistribute}
+              className="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition-all shadow-md disabled:opacity-50"
+              disabled={isDistributing}
+            >
+              {isDistributing ? 'Distribuindo...' : '📤 Distribuir Multi-Canal (simulação)'}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Generated Content Preview */}
+      {generatedContent && (
+        <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">📄 Artigo Gerado</h3>
+          <div className="prose max-w-none">
+            <div 
+              className="text-slate-700 leading-relaxed whitespace-pre-wrap"
+              style={{ maxHeight: '400px', overflowY: 'auto' }}
+            >
+              {generatedContent}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Multi-Channel Distribution */}
       <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
         <h3 className="text-xl font-bold text-slate-900 mb-4">📱 Distribuição Multi-Canal</h3>
-        <p className="text-sm text-slate-600 mb-6">
-          Configure em quais plataformas este artigo será publicado automaticamente.
-        </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+          <p className="text-sm text-amber-800">
+            ⚠️ <strong>Modo de demonstração:</strong> A distribuição atual gera URLs simuladas. 
+            Integração real com APIs do WordPress, Pinterest, LinkedIn e Instagram será implementada na fase Beta.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {platforms.map((platform) => (
@@ -227,15 +326,15 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
       {/* Distribution Results */}
       {distributionResults.length > 0 && (
         <div className="bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">✅ Resultados da Distribuição</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">✅ Resultados da Distribuição (Simulação)</h3>
           <div className="space-y-3">
             {distributionResults.map((result, idx) => (
               <div 
-                key={idx}
-                className={`border-2 rounded-lg p-4 ${
+                key={idx} 
+                className={`p-4 rounded-lg border-2 ${
                   result.success 
-                    ? 'border-green-200 bg-green-50' 
-                    : 'border-red-200 bg-red-50'
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -243,18 +342,16 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({
                     <p className="font-semibold text-slate-900">
                       {result.success ? '✓' : '✗'} {result.platform}
                     </p>
-                    {result.publishedUrl && (
-                      <a 
-                        href={result.publishedUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-indigo-600 hover:underline"
-                      >
-                        {result.publishedUrl}
-                      </a>
+                    {result.success && result.publishedUrl && (
+                      <p className="text-sm text-slate-600 mt-1">
+                        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">
+                          {result.publishedUrl}
+                        </span>
+                        <span className="ml-2 text-amber-600">(URL simulada)</span>
+                      </p>
                     )}
                     {result.error && (
-                      <p className="text-sm text-red-600">{result.error}</p>
+                      <p className="text-sm text-red-600 mt-1">{result.error}</p>
                     )}
                   </div>
                 </div>
