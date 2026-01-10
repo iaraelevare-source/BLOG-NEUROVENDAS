@@ -58,3 +58,57 @@ export interface HubRow {
     audio: boolean;
   };
 }
+
+// Lucresia Service Types (Phase 3)
+
+export interface NicheInsights {
+  mainOpportunities: string[];
+  competitiveLandscape: string;
+  targetAudience: string;
+  seasonalTrends: string[];
+}
+
+export interface PillarSuggestion {
+  name: string;
+  description: string;
+  keywords: string[];
+  expectedImpact: 'alto' | 'médio' | 'baixo';
+  rationale?: string;
+}
+
+export interface NicheAnalysis {
+  nicheInsights: NicheInsights;
+  authorityScore: number;
+  growthPotential: 'alto' | 'médio' | 'baixo';
+  recommendedPillars: PillarSuggestion[];
+}
+
+export interface EditorialRecommendation {
+  id: string;
+  priority: 'alta' | 'média' | 'baixa';
+  category: 'pilares' | 'conteúdo' | 'distribuição' | 'otimização';
+  title: string;
+  description: string;
+  actionable: boolean;
+  estimatedImpact: string;
+}
+
+export interface CalendarSuggestion {
+  id: string;
+  pillar: string;
+  title: string;
+  type: ArticleType | string;
+  priority: 'alta' | 'média' | 'baixa';
+  estimatedWeek: number;
+  rationale: string;
+  keywords: string[];
+}
+
+export interface ArticleIdea {
+  title: string;
+  type: ArticleType | string;
+  description: string;
+  keywords: string[];
+  estimatedImpact: 'alto' | 'médio' | 'baixo';
+  difficulty: 'fácil' | 'médio' | 'avançado';
+}

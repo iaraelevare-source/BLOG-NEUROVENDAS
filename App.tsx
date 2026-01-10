@@ -1,22 +1,31 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
+import Onboarding from './pages/Onboarding';
 import ArticleGenerator from './pages/ArticleGenerator';
 import HubView from './pages/HubView';
 import ExploreExamples from './pages/ExploreExamples';
 import AutomationConfig from './pages/AutomationConfig';
 import YoutubeConverter from './pages/YoutubeConverter';
 import WebStoriesView from './pages/WebStoriesView';
+import creditService from './services/creditService';
 import { Project, PlatformType } from './types';
-import { CREDIT_LIMIT } from './constants';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [credits, setCredits] = useState(CREDIT_LIMIT);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState('hub'); // Start with Hub Central as primary
+  const [credits, setCredits] = useState(creditService.getCredits().remaining);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [pillars, setPillars] = useState<string[]>([]); // Shared state for authority pillars
+  const [selectedPillar, setSelectedPillar] = useState<string>(''); // Context for Generator
+  const [clinicInfo, setClinicInfo] = useState({ name: '', specialty: 'harmonização facial' }); // Clinic data from onboarding
+
+  // Update credits display
+  const updateCredits = () => {
+    setCredits(creditService.getCredits().remaining);
+  };
 
   useEffect(() => {
     if (isLoggedIn && projects.length === 0) {
@@ -37,14 +46,44 @@ const App: React.FC = () => {
     return <LandingPage onStart={() => setIsLoggedIn(true)} />;
   }
 
+  // Show onboarding after login but before main app
+  if (!hasCompletedOnboarding) {
+    return (
+      <Onboarding
+        onComplete={(data: { clinicName: string; specialty: string }) => {
+          setClinicInfo({ name: data.clinicName, specialty: data.specialty });
+          setHasCompletedOnboarding(true);
+          setActiveTab('hub'); // Go directly to Hub Central
+        }}
+      />
+    );
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard pillars={pillars} onNavigateToHub={() => setActiveTab('hub')} />;
       case 'hub':
-        return <HubView />;
+        return (
+          <HubView 
+            pillars={pillars} 
+            setPillars={setPillars}
+            onCreateArticle={(pillar: string) => {
+              setSelectedPillar(pillar);
+              setActiveTab('generator');
+            }}
+            clinicSpecialty={clinicInfo.specialty}
+          />
+        );
       case 'generator':
-        return <ArticleGenerator />;
+        return (
+          <ArticleGenerator 
+            pillars={pillars}
+            selectedPillar={selectedPillar}
+            onBackToHub={() => setActiveTab('hub')}
+            onCreditsUpdate={updateCredits}
+          />
+        );
       case 'examples':
         return <ExploreExamples />;
       case 'autopilot':
