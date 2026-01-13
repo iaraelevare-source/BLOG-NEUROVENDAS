@@ -56,8 +56,8 @@ export class CreditService {
       creditsUsed: creditsToDeduct,
       creditsBefore: credits.remainingCredits || 0,
       creditsAfter: newRemainingCredits,
-      generationId: generationId || null,
-    } as any);
+      generationId: generationId ?? undefined,
+    });
 
     return {
       used: creditsToDeduct,

@@ -131,11 +131,26 @@ Para mais informações sobre ${keyword}, consulte um profissional especializado
       throw new Error('GEMINI_API_KEY not configured. Set USE_MOCK_AI=true or provide valid API key.');
     }
 
-    // TODO: Implement using the new @google/genai SDK
-    // The SDK has changed significantly. When ready to implement:
-    // 1. Import GoogleGenAI
-    // 2. Use ai.models.generateContent() or similar
-    // 3. Update model name to current supported model
+    /* 
+     * TODO: Implement using the @google/genai SDK v1.34.0+
+     * 
+     * Implementation steps:
+     * 1. Import GoogleGenAI from '@google/genai'
+     * 2. Create instance: const ai = new GoogleGenAI({ apiKey })
+     * 3. Get model: Use 'gemini-2.0-flash-exp' or 'gemini-1.5-pro'
+     * 4. Call generate method with prompt
+     * 5. Extract text from response
+     * 6. Calculate tokens (response may include token count)
+     * 
+     * Example skeleton:
+     * const { GoogleGenAI } = await import('@google/genai');
+     * const ai = new GoogleGenAI({ apiKey });
+     * const model = ai.models.[appropriate_method]({ model: 'gemini-2.0-flash-exp' });
+     * const result = await model.generateContent(prompt);
+     * const content = result.text();
+     * 
+     * Note: The SDK API has changed. Consult current @google/genai docs.
+     */
     
     throw new Error('Real Gemini API not yet implemented. Please use USE_MOCK_AI=true for now.');
   }
