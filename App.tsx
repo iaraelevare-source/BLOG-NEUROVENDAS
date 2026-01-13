@@ -9,8 +9,10 @@ import ExploreExamples from './pages/ExploreExamples';
 import AutomationConfig from './pages/AutomationConfig';
 import YoutubeConverter from './pages/YoutubeConverter';
 import WebStoriesView from './pages/WebStoriesView';
+import WordPressPublisherPage from './pages/WordPressPublisher';
 import { Project, PlatformType } from './types';
 import { CREDIT_LIMIT } from './constants';
+import { defaultEditorialCalendar, defaultBrandGuidelines } from './config/publisherConfig';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -53,6 +55,20 @@ const App: React.FC = () => {
         return <YoutubeConverter />;
       case 'stories':
         return <WebStoriesView />;
+      case 'wordpress':
+        return (
+          <WordPressPublisherPage
+            config={{
+              wordpress: {
+                siteUrl: process.env.WORDPRESS_SITE_URL || '',
+                username: process.env.WORDPRESS_USERNAME || '',
+                applicationPassword: process.env.WORDPRESS_APP_PASSWORD || '',
+              },
+              calendar: defaultEditorialCalendar,
+              brandGuidelines: defaultBrandGuidelines,
+            }}
+          />
+        );
       case 'articles':
         return (
           <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-sm">
