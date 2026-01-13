@@ -6,6 +6,7 @@ import contentRoutes from './routes/contents';
 import generationRoutes from './routes/generations';
 import creditRoutes from './routes/credits';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { apiLimiter } from './middleware/rateLimiter';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -26,7 +27,10 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-// Health check
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
+
+// Health check (no rate limit)
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok',
