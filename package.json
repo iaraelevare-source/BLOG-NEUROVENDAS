@@ -5,19 +5,42 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
-    "preview": "vite preview"
+    "build:server": "tsc --project tsconfig.server.json",
+    "preview": "vite preview",
+    "server": "node dist/server/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx drizzle/seed.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.34.0",
+    "bcryptjs": "^3.0.3",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^0.562.0",
+    "mysql2": "^3.16.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "lucide-react": "^0.562.0",
-    "@google/genai": "^1.34.0",
-    "recharts": "^3.6.0"
+    "recharts": "^3.6.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "drizzle-kit": "^0.31.8",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
