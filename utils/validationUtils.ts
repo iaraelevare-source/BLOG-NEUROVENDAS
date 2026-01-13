@@ -247,17 +247,73 @@ function sanitizeString(str: string): string {
     .trim()
     .replace(/[<>]/g, '') // Remove angle brackets
     .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/data:/gi, '') // Remove data: protocol
+    .replace(/vbscript:/gi, '') // Remove vbscript: protocol
     .replace(/on\w+\s*=/gi, ''); // Remove event handlers
 }
 
 /**
- * Sanitize HTML content (basic sanitization)
- * In production, use a library like DOMPurify
+ * Sanitize HTML content with comprehensive XSS protection
+ * 
+ * **SECURITY WARNING**: This is basic regex-based sanitization that has known limitations.
+ * It provides defense-in-depth but is NOT sufficient for production use with untrusted content.
+ * 
+ * **For production, you MUST use a proven HTML sanitization library like:**
+ * - DOMPurify (recommended): https://github.com/cure53/DOMPurify
+ * - sanitize-html: https://github.com/apostrophecms/sanitize-html
+ * - isomorphic-dompurify: For Node.js environments
+ * 
+ * These libraries handle complex edge cases like:
+ * - Malformed HTML and Unicode tricks
+ * - mXSS (mutation XSS) attacks
+ * - Context-specific escaping
+ * - HTML entity encoding issues
+ * 
+ * This function provides basic protection only and should be considered
+ * the LAST line of defense, not the primary security measure.
  */
 function sanitizeHtml(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+\s*=/gi, '') // Remove inline event handlers
-    .replace(/<iframe/gi, ''); // Remove iframe tags
+  let sanitized = html;
+  
+  // Remove dangerous protocols (case-insensitive, with whitespace variations)
+  // Note: Multiple passes needed as replacements can expose new patterns
+  for (let i = 0; i < 3; i++) {
+    const dangerousProtocols = ['javascript', 'data', 'vbscript', 'file'];
+    dangerousProtocols.forEach(protocol => {
+      const regex = new RegExp(`${protocol}\\s*:`, 'gi');
+      sanitized = sanitized.replace(regex, '');
+    });
+  }
+  
+  // Remove script tags with all variations
+  // Multiple passes to handle nested or malformed tags
+  for (let i = 0; i < 3; i++) {
+    sanitized = sanitized.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '');
+    sanitized = sanitized.replace(/<script\b[^>]*>/gi, ''); // Remove opening tags without closing
+  }
+  
+  // Remove iframe tags with all variations
+  for (let i = 0; i < 3; i++) {
+    sanitized = sanitized.replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe\s*>/gi, '');
+    sanitized = sanitized.replace(/<iframe\b[^>]*>/gi, '');
+  }
+  
+  // Remove event handlers (all on* attributes)
+  // Multiple passes to handle cases where removal exposes new handlers
+  for (let i = 0; i < 3; i++) {
+    sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
+    sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
+  }
+  
+  // Remove style attributes that could contain dangerous content
+  sanitized = sanitized.replace(/style\s*=\s*["'][^"']*["']/gi, '');
+  
+  // Remove object and embed tags
+  sanitized = sanitized.replace(/<object\b[^>]*>[\s\S]*?<\/object\s*>/gi, '');
+  sanitized = sanitized.replace(/<embed\b[^>]*>/gi, '');
+  
+  // Remove form tags (potential for CSRF)
+  sanitized = sanitized.replace(/<form\b[^>]*>[\s\S]*?<\/form\s*>/gi, '');
+  
+  return sanitized;
 }

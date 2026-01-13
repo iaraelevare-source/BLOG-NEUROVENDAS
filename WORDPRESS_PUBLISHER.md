@@ -185,16 +185,47 @@ O sistema suporta formatação tipo Markdown que é convertida automaticamente p
 
 ## 🔒 Segurança
 
-### Sanitização de Entrada
+### ⚠️ AVISO IMPORTANTE DE SEGURANÇA
+
+**A sanitização de HTML implementada é BÁSICA e adequada apenas para ambientes controlados.**
+
+Para uso em PRODUÇÃO com conteúdo não confiável, você DEVE substituir a função `sanitizeHtml` por uma biblioteca robusta como:
+
+```bash
+npm install dompurify
+npm install @types/dompurify --save-dev
+```
+
+```typescript
+import DOMPurify from 'dompurify';
+
+function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'h2', 'h3', 'ul', 'ol', 'li', 'strong', 'em', 'a'],
+    ALLOWED_ATTR: ['href', 'class', 'id'],
+  });
+}
+```
+
+**Por que DOMPurify é necessário:**
+- Protege contra mXSS (mutation XSS)
+- Lida com Unicode tricks e HTML entities
+- Detecta contextos perigosos automaticamente
+- Mantido ativamente com atualizações de segurança
+- Testado contra milhares de vetores XSS conhecidos
+
+### Sanitização Atual (Básica)
 - ✅ Remoção de scripts maliciosos
 - ✅ Bloqueio de event handlers
 - ✅ Remoção de iframes não autorizados
-- ✅ Proteção contra XSS
+- ✅ Proteção básica contra XSS
+- ⚠️ NÃO protege contra todos os vetores XSS avançados
 
 ### Autenticação
 - ✅ Usa WordPress Application Passwords (OAuth 2.0)
 - ✅ Não armazena senhas em texto plano
 - ✅ Credenciais via variáveis de ambiente
+- ✅ Validação de formato de credenciais
 
 ## 📊 Score SEO
 

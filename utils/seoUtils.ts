@@ -70,22 +70,23 @@ export function formatContentForWordPress(content: string): string {
   // Convert #### to H4
   formatted = formatted.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
 
-  // Convert unordered lists
-  formatted = formatted.replace(/^\* (.+)$/gm, '<li>$1</li>');
-  formatted = formatted.replace(/^- (.+)$/gm, '<li>$1</li>');
+  // Convert ordered lists (numbered)
+  formatted = formatted.replace(/^\d+\. (.+)$/gm, '<li class="ordered">$1</li>');
   
-  // Wrap consecutive list items in <ul>
-  formatted = formatted.replace(/(<li>.*<\/li>\n?)+/g, (match) => {
-    return `<ul>\n${match}</ul>\n`;
+  // Convert unordered lists (bullets)
+  formatted = formatted.replace(/^\* (.+)$/gm, '<li class="unordered">$1</li>');
+  formatted = formatted.replace(/^- (.+)$/gm, '<li class="unordered">$1</li>');
+  
+  // Wrap consecutive ordered list items in <ol>
+  formatted = formatted.replace(/(<li class="ordered">.*?<\/li>\n?)+/g, (match) => {
+    const cleaned = match.replace(/ class="ordered"/g, '');
+    return `<ol>\n${cleaned}</ol>\n`;
   });
-
-  // Convert ordered lists
-  formatted = formatted.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-  formatted = formatted.replace(/(<li>.*<\/li>\n?)+/g, (match) => {
-    if (!match.includes('<ul>')) { // Only if not already wrapped
-      return `<ol>\n${match}</ol>\n`;
-    }
-    return match;
+  
+  // Wrap consecutive unordered list items in <ul>
+  formatted = formatted.replace(/(<li class="unordered">.*?<\/li>\n?)+/g, (match) => {
+    const cleaned = match.replace(/ class="unordered"/g, '');
+    return `<ul>\n${cleaned}</ul>\n`;
   });
 
   // Convert bold **text** or __text__

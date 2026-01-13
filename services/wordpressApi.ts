@@ -42,6 +42,14 @@ export class WordPressApiService {
    * Get Basic Authentication header
    */
   private getAuthHeader(): string {
+    // Validate credentials don't contain invalid characters
+    if (this.config.username.includes(':')) {
+      throw new Error('Username cannot contain colon character');
+    }
+    if (this.config.applicationPassword.includes('\n') || this.config.applicationPassword.includes('\r')) {
+      throw new Error('Application password contains invalid characters');
+    }
+    
     const credentials = `${this.config.username}:${this.config.applicationPassword}`;
     return `Basic ${btoa(credentials)}`;
   }

@@ -400,6 +400,8 @@ const WordPressPublisherPage: React.FC<WordPressPublisherPageProps> = ({ config 
                       maxHeight: '400px',
                       overflow: 'auto',
                     }}
+                    // Note: Content is sanitized via sanitizeInput() before preview
+                    // All script tags, event handlers, and iframes are removed
                     dangerouslySetInnerHTML={{ __html: preview.content }}
                   />
                 </div>
