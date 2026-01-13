@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, FileText, Target, Wand2 } from 'lucide-react';
 import { ArticleType } from '../types';
+import { toast } from '../utils/toast';
 
 const ArticleGenerator: React.FC = () => {
   const [keyword, setKeyword] = useState('');
@@ -12,7 +13,7 @@ const ArticleGenerator: React.FC = () => {
     // Simulate generation
     setTimeout(() => {
       setIsGenerating(false);
-      alert('Artigo gerado com sucesso! Verifique o Hub Central.');
+      toast.success('Artigo gerado com sucesso! Verifique o Hub Central.');
     }, 2000);
   };
 

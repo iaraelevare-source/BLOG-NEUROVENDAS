@@ -31,14 +31,22 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
+          const bgColorClass = stat.color === 'emerald' ? 'bg-emerald-50' :
+                               stat.color === 'amber' ? 'bg-amber-50' :
+                               stat.color === 'indigo' ? 'bg-indigo-50' :
+                               stat.color === 'purple' ? 'bg-purple-50' : 'bg-slate-50';
+          const textColorClass = stat.color === 'emerald' ? 'text-emerald-600' :
+                                 stat.color === 'amber' ? 'text-amber-600' :
+                                 stat.color === 'indigo' ? 'text-indigo-600' :
+                                 stat.color === 'purple' ? 'text-purple-600' : 'text-slate-600';
           return (
             <div
               key={index}
               className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-${stat.color}-50`}>
-                  <Icon className={`w-6 h-6 text-${stat.color}-600`} />
+                <div className={`p-3 rounded-xl ${bgColorClass}`}>
+                  <Icon className={`w-6 h-6 ${textColorClass}`} />
                 </div>
               </div>
               <p className="text-slate-500 text-sm mb-1">{stat.label}</p>

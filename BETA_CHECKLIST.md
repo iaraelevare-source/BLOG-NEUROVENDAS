@@ -118,6 +118,7 @@ O aplicativo **AutoBlog AI - Fábrica de Conteúdo SEO** agora possui todos os c
 - [ ] Code splitting e otimização
 - [ ] Cache de requisições
 - [ ] PWA capabilities
+- [ ] Substituir toast utility temporário por biblioteca adequada (react-hot-toast ou sonner)
 
 #### 7. Features Premium
 - [ ] Templates personalizáveis

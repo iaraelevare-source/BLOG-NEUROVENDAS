@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Image, Wand2, Eye } from 'lucide-react';
 import { WebStory, WebStorySlide } from '../types';
+import { toast } from '../utils/toast';
 
 const WebStoriesView: React.FC = () => {
   const [selectedArticle, setSelectedArticle] = useState('');
@@ -26,7 +27,7 @@ const WebStoriesView: React.FC = () => {
     setIsGenerating(true);
     setTimeout(() => {
       setIsGenerating(false);
-      alert('Web Story gerada com sucesso!');
+      toast.success('Web Story gerada com sucesso!');
     }, 2000);
   };
 

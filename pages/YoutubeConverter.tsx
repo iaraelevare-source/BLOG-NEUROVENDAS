@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Youtube, Link as LinkIcon, Wand2, Download } from 'lucide-react';
+import { toast } from '../utils/toast';
 
 const YoutubeConverter: React.FC = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -12,7 +13,7 @@ const YoutubeConverter: React.FC = () => {
     // Simulate conversion
     setTimeout(() => {
       setIsConverting(false);
-      alert('Vídeo convertido em artigo com sucesso!');
+      toast.success('Vídeo convertido em artigo com sucesso!');
     }, 3000);
   };
 
